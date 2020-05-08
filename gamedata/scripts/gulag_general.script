@@ -264,7 +264,7 @@ function load_job(smart)
 
 		"[kamp@"..way_name.."]\n"..
 		"center_point = kamp_"..it.."\n"..
-		"soundgroup = "..way_name.."\n"
+--		"soundgroup = "..way_name.."\n" -- not used
 ]]
 		ltx[ltx_num + 1] = "[logic@"
 		ltx[ltx_num + 2] = way_name
@@ -274,9 +274,7 @@ function load_job(smart)
 		ltx[ltx_num + 6] = way_name
 		ltx[ltx_num + 7] = "]\ncenter_point=kamp_"
 		ltx[ltx_num + 8] = it
-		ltx[ltx_num + 9] = "\nsoundgroup="
-		ltx[ltx_num + 10] = way_name
-		ltx_num = ltx_num + 11
+		ltx_num = ltx_num + 9
 		ltx[ltx_num] = "\n"
 
 		if smart_def_restr then
@@ -719,10 +717,10 @@ function load_job(smart)
 	local stalker_attack_jobs = {_prior = 60, jobs = {}, _current_squad_action = "attack_point"}
 	local attack_jobs_num = 0
 
-	for k, target_smart_obj in pairs (board:get_nearest_smarts(smart)) do
+	for target_smart_id, target_smart_obj in pairs (board:get_nearest_smarts(smart)) do
 
 		local target_smart = target_smart_obj:name()
-		local stalker_attack_smart_jobs = {_prior = 60, jobs = {}, _current_squad_action = "attack_point", _squad_attack_point = target_smart}
+		local stalker_attack_smart_jobs = {_prior = 60, jobs = {}, _current_squad_action = "attack_point", _squad_attack_point = target_smart_id}
 
 	--'------------------------------------------------------------------------
 	--'				RANGER
@@ -1605,10 +1603,10 @@ function load_job(smart)
 
 	attack_jobs_num = 0 -- re-used from stalker_attack_jobs
 
-	for k, target_smart_obj in pairs (board:get_nearest_smarts(smart)) do
+	for target_smart_id, target_smart_obj in pairs (board:get_nearest_smarts(smart)) do
 
 		local target_smart = target_smart_obj:name()
-		local monster_attack_smart_jobs = {_prior = 50, jobs = {}, _current_squad_action = "attack_point", _squad_attack_point = target_smart}
+		local monster_attack_smart_jobs = {_prior = 50, jobs = {}, _current_squad_action = "attack_point", _squad_attack_point = target_smart_id}
 
 	--'------------------------------------------------------------------------
 	--'				MONSTER ATTACK

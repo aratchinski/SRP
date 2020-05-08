@@ -4,22 +4,6 @@ local board = nil
 local table_sort = table.sort
 local table_remove = table.remove
 
-local squad_by_level = {
-
-	marsh                = 1,
-	escape               = 2,
-	garbage              = 3,
-	agroprom             = 4,
-	darkvalley           = 5,
-	agroprom_underground = 6,
-	yantar               = 7,
-	red_forest           = 8,
-	military             = 9,
-	limansk              = 10,
-	hospital             = 11,
-	stancia_2            = 12
-}
-
 sim_fight = {
 
 	csky       = "renegade",
@@ -392,7 +376,7 @@ function sim_board:get_spawn_smart(faction)
 	for smart_id, spawn_faction_condlist in pairs (self.spawn_smarts) do
 		local smart = self_smarts[smart_id].smrt
 		if is_point_avail(smart, faction_name) then
-			local spawn_faction = xr_logic.pick_section_from_condlist(db.actor_proxy, smart, spawn_faction_condlist)
+			local spawn_faction = xr_logic.pick_section_from_condlist(db.actor, smart, spawn_faction_condlist) -- db.actor guaranteed valid by se_sim_faction:update
 			if spawn_faction == faction_name or spawn_faction == "all" then
 				local population_okay = false
 				local smart_faction = smart.player_name
@@ -422,7 +406,7 @@ function sim_board:create_squad(faction_id, squad_class, spawn_smart, sq_id, set
 	local self_squads = self.squads
 
 	if self_squads[squad_id] ~= nil then
-		abort("[sim_board:create_squad]: Tried to assign a squad ID that is already in use: '%s'.", tostring(squad_id))
+		abort("[sim_board:create_squad]: Tried to assign a squad ID that is already in use: '%s'.", squad_id)
 	end
 
 	local squad = squad_class(self, faction_id, squad_id, settings_id)
@@ -438,19 +422,16 @@ function sim_board:create_squad(faction_id, squad_class, spawn_smart, sq_id, set
 
 	self:assign_squad_to_smart(squad, spawn_smart.id)
 
---	local board = squad.board
 	local sim = _G.sim
+	local spawn_squad_id = spawn_smart.squad_id
 
 	for npc_id in pairs (squad.squad_npc) do
-		local se_npc = sim:object(npc_id)
-		self:setup_squad_and_group(se_npc)
+		change_team_sqaud_group(sim:object(npc_id), spawn_squad_id)
 	end
 
-	local faction = self.players[faction_id]
+	self.players[faction_id]:register_squad(squad)
 
-	faction:register_squad(squad)
-
---	faction.brain:calculate_current_expansion() -- done in enter_smart() if appropriate
+--	self.players[faction_id].brain:calculate_current_expansion() -- done in enter_smart() if appropriate
 
 	self:enter_smart(squad, spawn_smart.id, after_load)
 
@@ -702,26 +683,39 @@ function sim_board:enter_smart(squad, smart_id, after_load)
 	end
 end
 
-function sim_board:setup_squad_and_group(se_npc)
+--[[
+
+local squad_by_level =
+{
+	marsh                = 1,
+	escape               = 2,
+	garbage              = 3,
+	agroprom             = 4,
+	darkvalley           = 5,
+	agroprom_underground = 6,
+	yantar               = 7,
+	red_forest           = 8,
+	military             = 9,
+	limansk              = 10,
+	hospital             = 11,
+	stancia_2            = 12
+}
+
+function sim_board:setup_squad_and_group(se_npc, squad)
 
 	change_team_sqaud_group(se_npc, se_npc.team, se_npc.squad, squad_by_level[level.name()] or 0)
-
-	local squad = self.squads[se_npc.squad_id]
-
-	if squad == nil then
-		change_team_sqaud_group(se_npc, se_npc.team, 0, se_npc.group)
-		return
-	end
 
 	local smart_id = squad.current_action and squad.current_action.dest_smrt_id or squad.smart_id
 
 	change_team_sqaud_group(se_npc, se_npc.team, smart_id, se_npc.group)
 end
 
+]]
+
 function sim_board:build_cross_table(smart)
 
 	local ini = smart:spawn_ini()
-	local targets_str = ini:section_exist("smart_terrain") and ini:line_exist("smart_terrain", "targets") and ini:r_string("smart_terrain", "targets")
+	local targets_str = ini:line_exist("smart_terrain", "targets") and ini:r_string("smart_terrain", "targets")
 
 	if not targets_str then -- false if section or line doesn't exist; nil if the value of the 'targets' field is empty (that is, no targets supplied)
 		return
